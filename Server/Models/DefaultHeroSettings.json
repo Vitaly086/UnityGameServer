@@ -1,0 +1,14 @@
+{
+  "Name": "NoWeapon01",
+  "Level": 1,
+  "Experience": 10,
+  "Description": "No weapon hero",
+  "Health": 100,
+  "Attack": 5,
+  "Defense": 2,
+  "Speed": 5,
+  "Type": "Melee",
+  "WasBought": true,
+  "Price": 0,
+  "IsSelected" : true
+}
