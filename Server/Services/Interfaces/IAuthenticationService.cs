@@ -5,6 +5,6 @@ namespace Server.Services;
 
 public interface IAuthenticationService
 {
-    public (bool success, string content) Register(AuthenticationRequest authenticationRequest);
-    public (bool success, string content, UserProfile userProfile) Login(AuthenticationRequest authenticationRequest);
+    public AuthenticationResult Register(AuthenticationRequest authenticationRequest);
+    public AuthenticationResult Login(AuthenticationRequest authenticationRequest);
 }

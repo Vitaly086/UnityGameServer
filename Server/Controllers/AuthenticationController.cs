@@ -19,22 +19,22 @@ public class AuthenticationController : ControllerBase
     [HttpPost("register")]
     public IActionResult Register(AuthenticationRequest request)
     {
-        var (success, content) = _authenticationService.Register(request);
-        return success ? Login(request) : BadRequest(content);
+        var result = _authenticationService.Register(request);
+        return result.Success ? Login(request) : BadRequest(result.Content);
     }
 
     [HttpPost("login")]
     public IActionResult Login(AuthenticationRequest request)
     {
-        var (success, content, userProfile) = _authenticationService.Login(request);
-        if (success)
+        var result = _authenticationService.Login(request);
+        if (result.Success)
         {
             return Ok(new AuthenticationResponse()
             {
-                UserProfile = userProfile
+                UserProfile = result.UserProfile
             });
         }
 
-        return BadRequest(content);
+        return BadRequest(result.Content);
     }
 }
