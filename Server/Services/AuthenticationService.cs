@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Server.Extensions;
 using Server.Models;
 using Server.Request;
+using Server.Services.Interfaces;
 
 namespace Server.Services
 {
@@ -12,13 +13,14 @@ namespace Server.Services
     {
         private readonly Settings _settings;
         private readonly GameDbContext _context;
-        private readonly HeroSettingsService _heroSettingsService;
+        private readonly HeroesService _heroesService;
+        private readonly int _defaultHeroId = 1;
 
-        public AuthenticationService(Settings settings, GameDbContext context, HeroSettingsService heroSettingsService)
+        public AuthenticationService(Settings settings, GameDbContext context, HeroesService heroesService)
         {
             _settings = settings;
             _context = context;
-            _heroSettingsService = heroSettingsService;
+            _heroesService = heroesService;
         }
 
         public AuthenticationResult Register(AuthenticationRequest request)
@@ -44,10 +46,11 @@ namespace Server.Services
             };
 
             userProfile.ProvideSaltAndHash();
+            var defaultHero = _heroesService.CreateDefaultHero(_defaultHeroId);
+            defaultHero.UserId = userProfile.Id;
+            userProfile.Heroes.Add(defaultHero);
             _context.Add(userProfile);
             _context.SaveChanges();
-
-            _heroSettingsService.CreateDefaultHeroSettings(userProfile.Id);
 
             return new AuthenticationResult
             {
@@ -66,8 +69,8 @@ namespace Server.Services
 
             if (string.IsNullOrEmpty(deviceId))
             {
-                userProfile = GetUserProfileByUsername(username);
-                if (IsInvalidUsername(userProfile) || IsInvalidPassword(userProfile, password))
+                userProfile = _context.UserProfiles.SingleOrDefault(user => user.Username == username);
+                if (userProfile == null || IsInvalidPassword(userProfile, password))
                 {
                     return new AuthenticationResult
                     {
@@ -78,8 +81,9 @@ namespace Server.Services
             }
             else
             {
-                userProfile = GetUserProfileByDeviceId(deviceId);
-                if (IsInvalidUsername(userProfile))
+                userProfile = _context.UserProfiles.SingleOrDefault(user => user.DeviceId == deviceId);
+
+                if (userProfile == null)
                 {
                     return new AuthenticationResult
                     {
@@ -89,9 +93,14 @@ namespace Server.Services
                 }
             }
 
-            userProfile.HeroesSettings = _heroSettingsService.LoadHeroesSettings(userProfile.Id);
+            userProfile.Heroes = _heroesService.GetUserHeroes(userProfile.Id);
 
-            var jwtToken = GenerateJwtToken(AssembleClaimsIdentity(userProfile));
+            var claimsIdentity = new ClaimsIdentity(new[]
+            {
+                new Claim("id", userProfile.Id.ToString())
+            });
+
+            var jwtToken = GenerateJwtToken(claimsIdentity);
             userProfile.JwtToken = jwtToken;
             _context.SaveChanges();
 
@@ -102,34 +111,12 @@ namespace Server.Services
             };
         }
 
-        private UserProfile GetUserProfileByDeviceId(string deviceId)
-        {
-            return _context.UserProfiles.SingleOrDefault(user => user.DeviceId == deviceId);
-        }
-
-        private UserProfile GetUserProfileByUsername(string username)
-        {
-            return _context.UserProfiles.SingleOrDefault(user => user.Username == username);
-        }
-
-        private bool IsInvalidUsername(UserProfile userProfile)
-        {
-            return userProfile == null;
-        }
 
         private bool IsInvalidPassword(UserProfile userProfile, string password)
         {
             return userProfile.PasswordHash != AuthenticationHelpers.ComputeHash(password, userProfile.Salt);
         }
 
-        private ClaimsIdentity AssembleClaimsIdentity(UserProfile userProfile)
-        {
-            var subject = new ClaimsIdentity(new[]
-            {
-                new Claim("id", userProfile.Id.ToString())
-            });
-            return subject;
-        }
 
         private string GenerateJwtToken(ClaimsIdentity subject)
         {

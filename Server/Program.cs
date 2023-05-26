@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Server;
 using Server.Models;
 using Server.Services;
+using Server.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +29,7 @@ services.AddControllers().AddNewtonsoftJson(options =>
 });
 
 services.AddScoped<IAuthenticationService, AuthenticationService>();
-services.AddScoped<HeroSettingsService>();
+services.AddScoped<HeroesService>();
 
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
@@ -43,12 +44,6 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
 
 
 var app = builder.Build();
-
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-}
 
 app.UseHttpsRedirection();
 

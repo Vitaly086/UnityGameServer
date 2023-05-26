@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Server.Request;
 using Server.Response;
 using Server.Services;
+using Server.Services.Interfaces;
 
 namespace Server.Controllers;
 
@@ -16,7 +17,7 @@ public class AuthenticationController : ControllerBase
         _authenticationService = authenticationService;
     }
 
-    [HttpPost("register")]
+    [HttpPost("registration")]
     public IActionResult Register(AuthenticationRequest request)
     {
         var result = _authenticationService.Register(request);

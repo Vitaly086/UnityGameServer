@@ -13,7 +13,7 @@ public class UserProfile
     public string Salt { get; set; }
     public int Money { get; set; } = 1000;
     public int Gems { get; set; } = 100;
-    
-    [ForeignKey("UserId")]
-    public List<HeroSettings> HeroesSettings { get; set; } = new();
+
+    [ForeignKey("UserId")] 
+    public List<Heroes> Heroes { get; set; } = new();
 }

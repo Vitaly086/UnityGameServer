@@ -6,7 +6,8 @@ namespace Server;
 public class GameDbContext : DbContext
 {
     public DbSet<UserProfile> UserProfiles { get; set; }
-    public DbSet<HeroSettings> HeroSettings { get; set; }
+    public DbSet<Heroes> Heroes { get; set; }
+    public DbSet<DefaultHeroes> DefaultHeroes  { get; set; }
 
     public GameDbContext(DbContextOptions options) : base(options)
     {
@@ -14,9 +15,9 @@ public class GameDbContext : DbContext
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<HeroSettings>()
+        modelBuilder.Entity<Heroes>()
             .HasOne(h => h.UserProfile)
-            .WithMany(u => u.HeroesSettings)
+            .WithMany(u => u.Heroes)
             .HasForeignKey(h => h.UserId);
         
         base.OnModelCreating(modelBuilder);

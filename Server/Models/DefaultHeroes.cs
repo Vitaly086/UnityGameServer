@@ -1,9 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Server.Models;
 
-public class HeroSettings
+public class DefaultHeroes
 {
-    public int UserId { get; set; }
-    public int Id { get; set; }
+    [Key]
+    public int HeroId { get; set; }
     public string Name { get; set; }
     public int Level { get; set; }
     public float Experience { get; set; }
@@ -16,18 +18,4 @@ public class HeroSettings
     public bool WasBought { get; set; }
     public int Price { get; set; }
     public bool IsSelected { get; set; }
-    
-    public UserProfile UserProfile { get; set; }
-}
-
-public enum HeroType
-{
-    Melee,
-    Archer,
-    Mage
-}
-
-public class HeroCollection
-{
-    public List<HeroSettings> HeroSettingsList { get; set; }
 }

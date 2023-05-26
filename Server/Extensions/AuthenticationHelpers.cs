@@ -33,7 +33,7 @@ public static class AuthenticationHelpers
         userProfile.PasswordHash = ComputeHash(userProfile.PasswordHash, userProfile.Salt);
     }
 
-    public static string ComputeHash(string password, string saltString)
+    public static string? ComputeHash(string? password, string saltString)
     {
         var salt = Convert.FromBase64String(saltString);
         using var hashGenerator = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256);
