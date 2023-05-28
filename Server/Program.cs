@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Server;
+using Server.Extensions;
 using Server.Models;
 using Server.Services;
 using Server.Services.Interfaces;
@@ -15,6 +16,7 @@ builder.Configuration.Bind("Settings", settings);
 
 var services = builder.Services;
 services.AddSingleton(settings);
+AuthenticationHelpers.Initialize(settings.BearerKey);
 
 services.AddDbContext<GameDbContext>(options =>
 {
@@ -30,6 +32,7 @@ services.AddControllers().AddNewtonsoftJson(options =>
 
 services.AddScoped<IAuthenticationService, AuthenticationService>();
 services.AddScoped<HeroesService>();
+services.AddScoped<IInventoryService, InventoryService>();
 
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
@@ -44,6 +47,7 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
 
 
 var app = builder.Build();
+
 
 app.UseHttpsRedirection();
 
