@@ -1,9 +1,10 @@
 namespace Server.Models;
 
-public class Heroes
+public class HeroesSettings
 {
     public int UserId { get; set; }
     public int Id { get; set; }
+    public int PrefabId { get; set; }
     public string Name { get; set; }
     public int Level { get; set; }
     public float Experience { get; set; }

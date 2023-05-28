@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using Server.Models.Inventory;
 
 namespace Server.Models;
 
@@ -15,5 +16,8 @@ public class UserProfile
     public int Gems { get; set; } = 100;
 
     [ForeignKey("UserId")] 
-    public List<Heroes> Heroes { get; set; } = new();
+    public List<HeroesSettings> HeroesSettings { get; set; } = new();
+    
+    public List<UserInventory> Inventory { get; set; }
+
 }

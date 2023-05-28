@@ -48,7 +48,7 @@ namespace Server.Services
             userProfile.ProvideSaltAndHash();
             var defaultHero = _heroesService.CreateDefaultHero(_defaultHeroId);
             defaultHero.UserId = userProfile.Id;
-            userProfile.Heroes.Add(defaultHero);
+            userProfile.HeroesSettings.Add(defaultHero);
             _context.Add(userProfile);
             _context.SaveChanges();
 
@@ -93,7 +93,7 @@ namespace Server.Services
                 }
             }
 
-            userProfile.Heroes = _heroesService.GetUserHeroes(userProfile.Id);
+            userProfile.HeroesSettings = _heroesService.GetUserHeroes(userProfile.Id);
 
             var claimsIdentity = new ClaimsIdentity(new[]
             {

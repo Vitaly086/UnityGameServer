@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.Request;
 using Server.Response;
-using Server.Services;
 using Server.Services.Interfaces;
 
 namespace Server.Controllers;

@@ -6,6 +6,7 @@ public class DefaultHeroes
 {
     [Key]
     public int HeroId { get; set; }
+    public int PrefabId { get; set; }
     public string Name { get; set; }
     public int Level { get; set; }
     public float Experience { get; set; }
