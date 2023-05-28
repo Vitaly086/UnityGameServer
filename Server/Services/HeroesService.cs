@@ -13,14 +13,15 @@ public class HeroesService
         _context = context;
     }
 
-    public Heroes CreateDefaultHero(int heroId)
+    public HeroesSettings CreateDefaultHero(int heroId)
     {
         var defaultHero = _context.DefaultHeroes.FirstOrDefault(h => h.HeroId == heroId);
 
         if (defaultHero != null)
         {
-            var hero = new Heroes
+            var hero = new HeroesSettings
             {
+                PrefabId = defaultHero.PrefabId,
                 Name = defaultHero.Name,
                 Level = defaultHero.Level,
                 Experience = defaultHero.Experience,
@@ -41,9 +42,9 @@ public class HeroesService
         return null;
     }
 
-    public List<Heroes> GetUserHeroes(int userId)
+    public List<HeroesSettings> GetUserHeroes(int userId)
     {
-        return _context.Heroes.Include(hero => hero.UserProfile)
+        return _context.HeroesSettings.Include(hero => hero.UserProfile)
             .Where(hero => hero.UserProfile.Id == userId)
             .ToList();
     }
