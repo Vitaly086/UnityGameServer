@@ -1,14 +1,13 @@
-using Server.Models.Inventory;
+using Server.Models;
 
 namespace Server.Services.Interfaces;
 
 public interface IInventoryService
 {
-    public void AddItemToUser(int userId, int itemId);
-    public void AddItemToUser(int userId, int itemId, int quantity);
-    public InventoryItem GetItem(int userId, int itemId);
-    public void DeleteItem(int userId, int itemId);
-    public List<InventoryItem> GetItemsByType(int userId, ItemType type);
-    public List<UserInventory> GetUserItems(int userId);
+    public InventoryResponse AddItemToUser(int userId, int itemId);
+    public InventoryResponse GetItem(int userId, int itemId);
+    public InventoryResponse DeleteItem(int userId, int userItemId);
+    public InventoryResponse GetUserItems(int userId);
+    public InventoryResponse GetAllGameItems();
 
 }

@@ -16,15 +16,6 @@ public static class AuthenticationHelpers
         _bearerKey = bearerKey;
     }
 
-    public static int GetUserIdFromHeader(IHeaderDictionary headers)
-    {
-        var token = headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-        var claimsPrincipal = ValidateToken(token);
-        var userIdClaim = claimsPrincipal.FindFirst("id");
-        int.TryParse(userIdClaim?.Value, out var userId);
-        return userId;
-    }
-
     public static void ProvideSaltAndHash(this UserProfile userProfile)
     {
         var salt = GenerateSalt();
@@ -38,23 +29,6 @@ public static class AuthenticationHelpers
         using var hashGenerator = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256);
         var bytes = hashGenerator.GetBytes(24);
         return Convert.ToBase64String(bytes);
-    }
-
-    private static ClaimsPrincipal ValidateToken(string token)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_bearerKey));
-        var validationParameters = new TokenValidationParameters
-        {
-            IssuerSigningKey = key,
-            ValidateIssuerSigningKey = true, // Проверка ключа подписи
-            ValidateIssuer = false, // Проверка издателя токена
-            ValidateAudience = false // Проверка аудитории токена
-        };
-
-        var claimsPrincipal = tokenHandler.ValidateToken(token, validationParameters, out _);
-        return claimsPrincipal;
-
     }
 
     private static byte[] GenerateSalt()

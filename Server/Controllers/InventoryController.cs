@@ -21,56 +21,74 @@ namespace Server.Controllers
         [HttpGet("add/id={itemId}")]
         public IActionResult AddItemToUser(int itemId)
         {
-            var userId = AuthenticationHelpers.GetUserIdFromHeader(Request.Headers);
-            _inventoryService.AddItemToUser(userId, itemId);
-            return Ok("Item added successfully.");
+            var userId = Convert.ToInt32(User.Claims.FirstOrDefault(c => c.Type == "id")?.Value);
+
+            var result = _inventoryService.AddItemToUser(userId, itemId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result.Content);
         }
 
-        [HttpGet("add/id={itemId}&quantity={quantity}")]
-        public IActionResult AddItemToUser(int itemId, int quantity)
-        {
-            var userId = AuthenticationHelpers.GetUserIdFromHeader(Request.Headers);
-            _inventoryService.AddItemToUser(userId, itemId, quantity);
-            return Ok($"Added {quantity} items successfully.");
-        }
 
         [HttpGet("item/id={itemId}")]
         public IActionResult GetItem(int itemId)
         {
-            var userId = AuthenticationHelpers.GetUserIdFromHeader(Request.Headers);
-            try
+            var userId = Convert.ToInt32(User.Claims.FirstOrDefault(c => c.Type == "id")?.Value);
+
+            var result = _inventoryService.GetItem(userId, itemId);
+
+            if (result.Success)
             {
-                var item = _inventoryService.GetItem(userId, itemId);
-                return Ok(item);
+                return Ok(result);
             }
-            catch (Exception ex)
-            {
-                return NotFound(ex.Message);
-            }
+
+
+            return BadRequest(result.Content);
         }
+
 
         [HttpDelete("delete/id={itemId}")]
         public IActionResult DeleteItem(int itemId)
         {
-            var userId = AuthenticationHelpers.GetUserIdFromHeader(Request.Headers);
-            _inventoryService.DeleteItem(userId, itemId);
-            return Ok("Item deleted successfully.");
+            var userId = Convert.ToInt32(User.Claims.FirstOrDefault(c => c.Type == "id")?.Value);
+            var result = _inventoryService.DeleteItem(userId, itemId);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result.Content);
         }
 
         [HttpGet("items")]
         public IActionResult GetUserItems()
         {
-            var userId = AuthenticationHelpers.GetUserIdFromHeader(Request.Headers);
-            var userItems = _inventoryService.GetUserItems(userId);
-            return Ok(userItems);
-        }
+            var userId = Convert.ToInt32(User.Claims.FirstOrDefault(c => c.Type == "id")?.Value);
+            var result = _inventoryService.GetUserItems(userId);
 
-        [HttpGet("items/type={type}")]
-        public IActionResult GetItemsByType(ItemType type)
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result.Content);
+        }
+        
+        [HttpGet("items/all")]
+        public IActionResult GetAllGameItems()
         {
-            var userId = AuthenticationHelpers.GetUserIdFromHeader(Request.Headers);
-            var items = _inventoryService.GetItemsByType(userId, type);
-            return Ok(items);
+            var result = _inventoryService.GetAllGameItems();
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result.Content);
         }
     }
 }

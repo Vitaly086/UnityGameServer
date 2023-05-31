@@ -9,7 +9,7 @@ namespace Server
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<HeroesSettings> HeroesSettings { get; set; }
         public DbSet<DefaultHeroes> DefaultHeroes { get; set; }
-        public DbSet<InventoryItem> InventoryItems { get; set; }
+        public DbSet<Item> Items { get; set; }
         public DbSet<UserInventory> UserInventories { get; set; }
 
         public GameDbContext(DbContextOptions<GameDbContext> options) : base(options)
@@ -29,8 +29,6 @@ namespace Server
 
             modelBuilder.Entity<UserInventory>(entity =>
             {
-                entity.HasKey(ui => new { ui.UserId, ui.ItemId });
-
                 entity.HasOne(ui => ui.User)
                     .WithMany(u => u.Inventory)
                     .HasForeignKey(ui => ui.UserId);
@@ -38,15 +36,6 @@ namespace Server
                 entity.HasOne(ui => ui.Item)
                     .WithMany(i => i.UserInventories)
                     .HasForeignKey(ui => ui.ItemId);
-            });
-
-            modelBuilder.Entity<InventoryItemType>(entity =>
-            {
-                entity.HasKey(ii => ii.Id);
-
-                entity.HasOne(ii => ii.InventoryItem)
-                    .WithMany(i => i.InventoryItemTypes)
-                    .HasForeignKey(ii => ii.InventoryItemId);
             });
         }
     }

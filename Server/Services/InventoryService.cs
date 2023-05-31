@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Server.Models;
 using Server.Models.Inventory;
 using Server.Services.Interfaces;
 
@@ -11,106 +12,255 @@ public class InventoryService : IInventoryService
     public InventoryService(GameDbContext context)
     {
         _context = context;
-    }
 
-    public void AddItemToUser(int userId, int itemId)
-    {
-        AddItemToUser(userId, itemId, 1);
-    }
-
-    public void AddItemToUser(int userId, int itemId, int quantity)
-    {
-        var userInventory = _context.UserInventories
-            .SingleOrDefault(ui => ui.UserId == userId && ui.ItemId == itemId);
-
-        if (userInventory != null)
+        if (!_context.Items.Any())
         {
-            // Если предмет уже есть в инвентаре, увеличьте количество
-            userInventory.Quantity += quantity;
+            CreateDefaultItems();
         }
-        else
-        {
-            // Если предмета нет в инвентаре, добавьте новый
-            var item = _context.InventoryItems.Find(itemId);
-            if (item == null)
-            {
-                throw new Exception("Item not found");
-            }
+    }
 
-            userInventory = new UserInventory
+    public InventoryResponse AddItemToUser(int userId, int itemId)
+    {
+        var item = _context.Items.Find(itemId);
+        if (item == null)
+        {
+            return new InventoryResponse()
             {
-                UserId = userId,
-                Item = item,
-                Quantity = quantity
+                Content = "Item not found",
+                Success = false
             };
-            _context.UserInventories.Add(userInventory);
         }
+
+        var userInventory = new UserInventory
+        {
+            UserId = userId,
+            Item = item,
+        };
+        _context.UserInventories.Add(userInventory);
 
         _context.SaveChanges();
+        return new InventoryResponse()
+        {
+            Content = "Item added successfully",
+            Success = true,
+            UserItem = new UserItem()
+            {
+                UserItemId = userInventory.UserInventoryId,
+                Item = userInventory.Item
+            }
+        };
     }
 
 
-    public InventoryItem GetItem(int userId, int itemId)
+    public InventoryResponse GetItem(int userId, int itemId)
     {
         var userInventory = _context.UserInventories
-            .Include(ui => ui.Item) // Включаем связанный объект Item
-            .ThenInclude(item => item.InventoryItemTypes) // Включаем связанный объект InventoryItemTypes
+            .Include(ui => ui.Item)
             .SingleOrDefault(ui => ui.UserId == userId && ui.ItemId == itemId);
 
         if (userInventory?.Item == null)
         {
-            throw new Exception("Item not found");
+            return new InventoryResponse()
+            {
+                Success = false,
+                Content = "Item not found"
+            };
         }
 
-        return userInventory.Item;
+        return new InventoryResponse()
+        {
+            Success = true,
+            UserItem = new UserItem()
+            {
+                UserItemId = userInventory.UserInventoryId,
+                Item = userInventory.Item
+            }
+        };
     }
 
-    public void DeleteItem(int userId, int itemId)
+    public InventoryResponse DeleteItem(int userId, int userItemId)
     {
         var userInventory = _context.UserInventories
-            .SingleOrDefault(ui => ui.UserId == userId && ui.ItemId == itemId);
+            .SingleOrDefault(ui => ui.UserId == userId && ui.UserInventoryId == userItemId);
 
         if (userInventory == null)
         {
-            throw new Exception("Item not found");
+            return new InventoryResponse()
+            {
+                Success = false,
+                Content = "Item not found"
+            };
         }
 
-        if (userInventory.Quantity > 1)
-        {
-            userInventory.Quantity--;
-        }
-        else
-        {
-            _context.UserInventories.Remove(userInventory);
-        }
+
+        _context.UserInventories.Remove(userInventory);
 
         _context.SaveChanges();
-    }
-
-    public List<InventoryItem> GetItemsByType(int userId, ItemType type)
-    {
-        var userInventoryItems = _context.UserInventories
+        var userItems = _context.UserInventories
             .Where(ui => ui.UserId == userId)
-            .Select(ui => ui.ItemId)
+            .Select(ui => new
+            {
+                ui.UserInventoryId,
+                ui.Item
+            })
             .ToList();
 
-        var items = _context.InventoryItems
-            .Include(item => item.InventoryItemTypes) // Включаем связанные данные InventoryItemTypes
-            .Where(item => userInventoryItems.Contains(item.Id) &&
-                           item.InventoryItemTypes.Any(iit => iit.ItemType == type))
-            .ToList();
+        if (userItems.Count == 0)
+        {
+            return new InventoryResponse()
+            {
+                Success = false,
+                Content = "All item deleted"
+            };
+        }
 
-        return items;
+        var itemsWithInventoryId = userItems.Select(ui => new UserItem()
+        {
+            UserItemId = ui.UserInventoryId,
+            Item = ui.Item
+        }).ToList();
+
+        return new InventoryResponse()
+        {
+            Success = true,
+            Content = "Item deleted",
+            UserItems = itemsWithInventoryId
+        };
     }
 
-    public List<UserInventory> GetUserItems(int userId)
+    public InventoryResponse GetUserItems(int userId)
     {
         var userItems = _context.UserInventories
             .Where(ui => ui.UserId == userId)
-            .Include(ui => ui.Item) // Включаем связанные данные Item
-            .ThenInclude(item => item.InventoryItemTypes) // Включаем связанные данные InventoryItemTypes
+            .Select(ui => new
+            {
+                ui.UserInventoryId,
+                ui.Item
+            })
             .ToList();
 
-        return userItems;
+        if (userItems.Count == 0)
+        {
+            return new InventoryResponse()
+            {
+                Success = false,
+                Content = "Items not found"
+            };
+        }
+
+        var itemsWithInventoryId = userItems.Select(ui => new UserItem()
+        {
+            UserItemId = ui.UserInventoryId,
+            Item = ui.Item
+        }).ToList();
+
+        return new InventoryResponse()
+        {
+            Success = true,
+            UserItems = itemsWithInventoryId
+        };
+    }
+
+    public InventoryResponse GetAllGameItems()
+    {
+        var items = _context.Items.ToList();
+
+        if (items.Count == 0)
+        {
+            return new InventoryResponse()
+            {
+                Success = false,
+                Content = "Items not found"
+            };
+        }
+
+        return new InventoryResponse()
+        {
+            Success = true,
+            GameItems = items
+        };
+    }
+
+    private void CreateDefaultItems()
+    {
+        var sword = new Item()
+        {
+            Id = 1,
+            Name = "Sword",
+            Description = "Base sword",
+            ItemType = ItemType.Weapon,
+            Attack = 10,
+            Defense = 0,
+            Speed = 0,
+            Health = 0,
+            SpritePath = "Assets/Resources/Sprites/Demo/Demo_Icon_ItemIcons(Original)/Icon_Sword.Png"
+        };
+
+        var shield = new Item()
+        {
+            Id = 2,
+            Name = "Shield",
+            Description = "Base shield",
+            ItemType = ItemType.Armor,
+            Attack = 0,
+            Defense = 10,
+            Speed = 0,
+            Health = 0,
+            SpritePath = "Assets/Resources/Sprites/Demo/Demo_Icon_ItemIcons(Original)/Icon_Shield.Png"
+        };
+
+        var boots = new Item()
+        {
+            Id = 3,
+            Name = "Boots",
+            Description = "Base boots",
+            ItemType = ItemType.Movement,
+            Attack = 0,
+            Defense = 2,
+            Speed = 10,
+            Health = 0,
+            SpritePath = "Assets/Resources/Sprites/Demo/Demo_Icon_ItemIcons(Original)/Icon_Boots.Png"
+        };
+
+        var crown = new Item()
+        {
+            Id = 4,
+            Name = "Crown",
+            Description = "Crown of the best king",
+            ItemType = ItemType.Accessory,
+            Attack = 0,
+            Defense = 2,
+            Speed = 3,
+            Health = 15,
+            SpritePath = "Assets/Resources/Sprites/Demo/Demo_Icon_ItemIcons(Original)/Icon_Crown.Png"
+        };
+
+        var compas = new Item()
+        {
+            Id = 5,
+            Name = "Compas",
+            Description = "Magic compas",
+            ItemType = ItemType.Accessory,
+            Attack = 0,
+            Defense = 0,
+            Speed = 5,
+            Health = 1,
+            SpritePath = "Assets/Resources/Sprites/Demo/Demo_Icon_ItemIcons(Original)/Icon_Compass.Png"
+        };
+
+        var doubleSwords = new Item()
+        {
+            Id = 6,
+            Name = "Double swords ",
+            Description = "Double swords of master",
+            ItemType = ItemType.Weapon,
+            Attack = 15,
+            Defense = 0,
+            Speed = 0,
+            Health = 0,
+            SpritePath = "Assets/Resources/Sprites/Demo/Demo_Icon_ItemIcons(Original)/Icon_Battle.Png"
+        };
+        _context.Items.AddRange(sword, shield, boots, crown, compas, doubleSwords);
+        _context.SaveChanges();
     }
 }
