@@ -61,7 +61,7 @@ namespace Server.Controllers
                 return Ok(result);
             }
 
-            return BadRequest(result.Content);
+            return NotFound(result.Content);
         }
 
         [HttpGet("items")]
@@ -75,7 +75,7 @@ namespace Server.Controllers
                 return Ok(result);
             }
 
-            return BadRequest(result.Content);
+            return NotFound(result.Content);
         }
         
         [HttpGet("items/all")]
@@ -88,7 +88,7 @@ namespace Server.Controllers
                 return Ok(result);
             }
 
-            return BadRequest(result.Content);
+            return NotFound(result.Content);
         }
     }
 }

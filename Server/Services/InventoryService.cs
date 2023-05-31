@@ -109,7 +109,7 @@ public class InventoryService : IInventoryService
         {
             return new InventoryResponse()
             {
-                Success = false,
+                Success = true,
                 Content = "All item deleted"
             };
         }
