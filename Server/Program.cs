@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Server;
 using Server.Extensions;
 using Server.Models;
+using Server.Models.Inventory;
 using Server.Services;
 using Server.Services.Interfaces;
 
@@ -28,11 +29,14 @@ services.AddDbContext<GameDbContext>(options =>
 services.AddControllers().AddNewtonsoftJson(options =>
 {
     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+    options.SerializerSettings.Converters.Add(new DictionaryJsonConverter<Item, int>());
 });
 
 services.AddScoped<IAuthenticationService, AuthenticationService>();
 services.AddScoped<HeroesService>();
 services.AddScoped<IInventoryService, InventoryService>();
+services.AddScoped<IShopService, ShopService>();
+services.AddScoped<IUserMoneyService, UserMoneyService>();
 
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
@@ -48,6 +52,11 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<GameDbContext>();
+    var inventoryService = new InventoryService(dbContext);
+}
 
 app.UseHttpsRedirection();
 

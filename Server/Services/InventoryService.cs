@@ -19,69 +19,10 @@ public class InventoryService : IInventoryService
         }
     }
 
-    public InventoryResponse AddItemToUser(int userId, int itemId)
-    {
-        var item = _context.Items.Find(itemId);
-        if (item == null)
-        {
-            return new InventoryResponse()
-            {
-                Content = "Item not found",
-                Success = false
-            };
-        }
-
-        var userInventory = new UserInventory
-        {
-            UserId = userId,
-            Item = item,
-        };
-        _context.UserInventories.Add(userInventory);
-
-        _context.SaveChanges();
-        return new InventoryResponse()
-        {
-            Content = "Item added successfully",
-            Success = true,
-            UserItem = new UserItem()
-            {
-                UserItemId = userInventory.UserInventoryId,
-                Item = userInventory.Item
-            }
-        };
-    }
-
-
-    public InventoryResponse GetItem(int userId, int itemId)
+    public InventoryResponse DeleteItem(int userId, int itemId)
     {
         var userInventory = _context.UserInventories
-            .Include(ui => ui.Item)
             .SingleOrDefault(ui => ui.UserId == userId && ui.ItemId == itemId);
-
-        if (userInventory?.Item == null)
-        {
-            return new InventoryResponse()
-            {
-                Success = false,
-                Content = "Item not found"
-            };
-        }
-
-        return new InventoryResponse()
-        {
-            Success = true,
-            UserItem = new UserItem()
-            {
-                UserItemId = userInventory.UserInventoryId,
-                Item = userInventory.Item
-            }
-        };
-    }
-
-    public InventoryResponse DeleteItem(int userId, int userItemId)
-    {
-        var userInventory = _context.UserInventories
-            .SingleOrDefault(ui => ui.UserId == userId && ui.UserInventoryId == userItemId);
 
         if (userInventory == null)
         {
@@ -92,39 +33,21 @@ public class InventoryService : IInventoryService
             };
         }
 
-
-        _context.UserInventories.Remove(userInventory);
-
-        _context.SaveChanges();
-        var userItems = _context.UserInventories
-            .Where(ui => ui.UserId == userId)
-            .Select(ui => new
-            {
-                ui.UserInventoryId,
-                ui.Item
-            })
-            .ToList();
-
-        if (userItems.Count == 0)
+        if (userInventory.Count > 1)
         {
-            return new InventoryResponse()
-            {
-                Success = true,
-                Content = "All item deleted"
-            };
+            userInventory.Count--;
+        }
+        else
+        {
+            _context.UserInventories.Remove(userInventory);
         }
 
-        var itemsWithInventoryId = userItems.Select(ui => new UserItem()
-        {
-            UserItemId = ui.UserInventoryId,
-            Item = ui.Item
-        }).ToList();
+        _context.SaveChanges();
 
         return new InventoryResponse()
         {
             Success = true,
             Content = "Item deleted",
-            UserItems = itemsWithInventoryId
         };
     }
 
@@ -132,12 +55,12 @@ public class InventoryService : IInventoryService
     {
         var userItems = _context.UserInventories
             .Where(ui => ui.UserId == userId)
-            .Select(ui => new
-            {
-                ui.UserInventoryId,
-                ui.Item
-            })
-            .ToList();
+            .Include(ui => ui.Item)
+            .GroupBy(ui => ui.Item)
+            .ToDictionary(g =>
+                g.Key, g =>
+                g.Sum(ui => ui.Count));
+
 
         if (userItems.Count == 0)
         {
@@ -148,36 +71,10 @@ public class InventoryService : IInventoryService
             };
         }
 
-        var itemsWithInventoryId = userItems.Select(ui => new UserItem()
-        {
-            UserItemId = ui.UserInventoryId,
-            Item = ui.Item
-        }).ToList();
-
         return new InventoryResponse()
         {
             Success = true,
-            UserItems = itemsWithInventoryId
-        };
-    }
-
-    public InventoryResponse GetAllGameItems()
-    {
-        var items = _context.Items.ToList();
-
-        if (items.Count == 0)
-        {
-            return new InventoryResponse()
-            {
-                Success = false,
-                Content = "Items not found"
-            };
-        }
-
-        return new InventoryResponse()
-        {
-            Success = true,
-            GameItems = items
+            UserItems = userItems
         };
     }
 
@@ -188,6 +85,7 @@ public class InventoryService : IInventoryService
             Id = 1,
             Name = "Sword",
             Description = "Base sword",
+            Price = 10,
             ItemType = ItemType.Weapon,
             Attack = 10,
             Defense = 0,
@@ -201,6 +99,7 @@ public class InventoryService : IInventoryService
             Id = 2,
             Name = "Shield",
             Description = "Base shield",
+            Price = 200,
             ItemType = ItemType.Armor,
             Attack = 0,
             Defense = 10,
@@ -214,6 +113,7 @@ public class InventoryService : IInventoryService
             Id = 3,
             Name = "Boots",
             Description = "Base boots",
+            Price = 600,
             ItemType = ItemType.Movement,
             Attack = 0,
             Defense = 2,
@@ -227,6 +127,7 @@ public class InventoryService : IInventoryService
             Id = 4,
             Name = "Crown",
             Description = "Crown of the best king",
+            Price = 1000,
             ItemType = ItemType.Accessory,
             Attack = 0,
             Defense = 2,
@@ -240,6 +141,7 @@ public class InventoryService : IInventoryService
             Id = 5,
             Name = "Compas",
             Description = "Magic compas",
+            Price = 50,
             ItemType = ItemType.Accessory,
             Attack = 0,
             Defense = 0,
@@ -253,6 +155,7 @@ public class InventoryService : IInventoryService
             Id = 6,
             Name = "Double swords ",
             Description = "Double swords of master",
+            Price = 500,
             ItemType = ItemType.Weapon,
             Attack = 15,
             Defense = 0,

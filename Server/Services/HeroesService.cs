@@ -7,7 +7,6 @@ public class HeroesService
 {
     private readonly GameDbContext _context;
 
-
     public HeroesService(GameDbContext context)
     {
         _context = context;
@@ -16,30 +15,47 @@ public class HeroesService
     public HeroesSettings CreateDefaultHero(int heroId)
     {
         var defaultHero = _context.DefaultHeroes.FirstOrDefault(h => h.HeroId == heroId);
-
-        if (defaultHero != null)
+        if (defaultHero == null)
         {
-            var hero = new HeroesSettings
+            defaultHero = new DefaultHeroes
             {
-                PrefabId = defaultHero.PrefabId,
-                Name = defaultHero.Name,
-                Level = defaultHero.Level,
-                Experience = defaultHero.Experience,
-                Description = defaultHero.Description,
-                Health = defaultHero.Health,
-                Attack = defaultHero.Attack,
-                Defense = defaultHero.Defense,
-                Speed = defaultHero.Speed,
-                Type = defaultHero.Type,
-                WasBought = defaultHero.WasBought,
-                Price = defaultHero.Price,
-                IsSelected = defaultHero.IsSelected
+                PrefabId = 1,
+                Name = "NoWeaponed",
+                Level = 1,
+                Experience = 0,
+                Description = "Basic Hero",
+                Health = 100,
+                Attack = 10,
+                Defense = 2,
+                Speed = 5,
+                Type = 0,
+                WasBought = true,
+                Price = 0,
+                IsSelected = true
             };
 
-            return hero;
+            _context.Add(defaultHero);
+            _context.SaveChanges();
         }
 
-        return null;
+        var hero = new HeroesSettings
+        {
+            PrefabId = defaultHero.PrefabId,
+            Name = defaultHero.Name,
+            Level = defaultHero.Level,
+            Experience = defaultHero.Experience,
+            Description = defaultHero.Description,
+            Health = defaultHero.Health,
+            Attack = defaultHero.Attack,
+            Defense = defaultHero.Defense,
+            Speed = defaultHero.Speed,
+            Type = defaultHero.Type,
+            WasBought = defaultHero.WasBought,
+            Price = defaultHero.Price,
+            IsSelected = defaultHero.IsSelected
+        };
+
+        return hero;
     }
 
     public List<HeroesSettings> GetUserHeroes(int userId)

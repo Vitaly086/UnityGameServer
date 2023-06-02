@@ -32,10 +32,6 @@ namespace Server
                 entity.HasOne(ui => ui.User)
                     .WithMany(u => u.Inventory)
                     .HasForeignKey(ui => ui.UserId);
-
-                entity.HasOne(ui => ui.Item)
-                    .WithMany(i => i.UserInventories)
-                    .HasForeignKey(ui => ui.ItemId);
             });
         }
     }
