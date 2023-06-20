@@ -34,5 +34,10 @@ namespace Server
                     .HasForeignKey(ui => ui.UserId);
             });
         }
+        
+        public void CreateTables()
+        {
+            Database.EnsureCreated();
+        }
     }
 }

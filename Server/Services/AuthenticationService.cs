@@ -14,7 +14,6 @@ namespace Server.Services
         private readonly Settings _settings;
         private readonly GameDbContext _context;
         private readonly HeroesService _heroesService;
-        private readonly int _defaultHeroId = 1;
 
         public AuthenticationService(Settings settings, GameDbContext context, HeroesService heroesService)
         {
@@ -46,9 +45,10 @@ namespace Server.Services
             };
 
             userProfile.ProvideSaltAndHash();
-            var defaultHero = _heroesService.CreateDefaultHero(_defaultHeroId);
-            defaultHero.UserId = userProfile.Id;
-            userProfile.HeroesSettings.Add(defaultHero);
+            var defaultHero = _context.DefaultHeroes.FirstOrDefault(hero => hero.IsSelected);
+            var hero = CreateHeroSettings(userProfile, defaultHero);
+            
+            userProfile.HeroesSettings.Add(hero);
             _context.Add(userProfile);
             _context.SaveChanges();
 
@@ -111,6 +111,28 @@ namespace Server.Services
             };
         }
 
+
+        private HeroesSettings CreateHeroSettings(UserProfile userProfile, DefaultHeroes? defaultHero)
+        {
+            var hero = new HeroesSettings
+            {
+                UserId = userProfile.Id,
+                PrefabId = defaultHero.PrefabId,
+                Name = defaultHero.Name,
+                Level = defaultHero.Level,
+                Experience = defaultHero.Experience,
+                Description = defaultHero.Description,
+                Health = defaultHero.Health,
+                Attack = defaultHero.Attack,
+                Defense = defaultHero.Defense,
+                Speed = defaultHero.Speed,
+                Type = defaultHero.Type,
+                WasBought = defaultHero.WasBought,
+                Price = defaultHero.Price,
+                IsSelected = defaultHero.IsSelected
+            };
+            return hero;
+        }
 
         private bool IsInvalidPassword(UserProfile userProfile, string password)
         {

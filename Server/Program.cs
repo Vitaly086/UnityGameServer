@@ -55,7 +55,9 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<GameDbContext>();
+    dbContext.CreateTables(); 
     var inventoryService = new InventoryService(dbContext);
+    var heroService = new HeroesService(dbContext);
 }
 
 app.UseHttpsRedirection();
